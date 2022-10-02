@@ -1,3 +1,3 @@
-module eugene982@goglgears
+module goglgears
 
 go 1.16
