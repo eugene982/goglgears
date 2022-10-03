@@ -19,6 +19,15 @@ const (
 	GL_NORMALIZE  = C.GL_NORMALIZE
 
 	GL_AMBIENT_AND_DIFFUSE = C.GL_AMBIENT_AND_DIFFUSE
+
+	GL_COLOR_BUFFER_BIT = C.GL_COLOR_BUFFER_BIT
+	GL_DEPTH_BUFFER_BIT = C.GL_DEPTH_BUFFER_BIT
+
+	GL_BACK_LEFT  = C.GL_BACK_LEFT
+	GL_BACK_RIGHT = C.GL_BACK_RIGHT
+
+	GL_PROJECTION = C.GL_PROJECTION
+	GL_MODELVIEW  = C.GL_MODELVIEW
 )
 
 const ( // light
@@ -38,6 +47,10 @@ func End() {
 
 func Enable(mode uint) {
 	C.glEnable(C.uint(mode))
+}
+
+func Disable(mode uint) {
+	C.glDisable(C.uint(mode))
 }
 
 func ShadeModel(mode uint) {
@@ -70,4 +83,50 @@ func Materialfv(face uint, pname uint, params *float32) {
 
 func EndList() {
 	C.glEndList()
+}
+
+func Clear(mask uint) {
+	C.glClear(C.uint(mask))
+}
+
+func DrawBuffer(mode uint) {
+	C.glDrawBuffer(C.uint(mode))
+}
+
+func MatrixMode(mode uint) {
+	C.glMatrixMode(C.uint(mode))
+}
+
+func PushMatrix() {
+	C.glPushMatrix()
+}
+
+func PopMatrix() {
+	C.glPopMatrix()
+}
+
+func Rotatef(angle, x, y, z float32) {
+	C.glRotatef(C.float(angle), C.float(x), C.float(y), C.float(z))
+}
+
+func Translatef(x, y, z float32) {
+	C.glTranslatef(C.float(x), C.float(y), C.float(z))
+}
+
+func Translated(x, y, z float64) {
+	C.glTranslated(C.double(x), C.double(y), C.double(z))
+}
+
+func CallList(list uint) {
+	C.glCallList(C.uint(list))
+}
+
+func LoadIdentity() {
+	C.glLoadIdentity()
+}
+
+func Frustum(left, right, bottom, top, zNear, zFar float64) {
+	C.glFrustum(C.double(left), C.double(right),
+		C.double(bottom), C.double(top),
+		C.double(zNear), C.double(zFar))
 }

@@ -1,4 +1,4 @@
-package main
+package gear
 
 import (
 	"math"
@@ -6,16 +6,12 @@ import (
 	"goglgears/pkg/gl"
 )
 
-type Gear struct {
-	glGenList uint
-}
-
 func NewGear(innerRadius float32,
 	outerRadius float32,
 	width float32,
 	teeth int,
 	toothDepth float32,
-	material [4]float32) Gear {
+	material [4]float32) uint {
 
 	list := gl.GenLists(1)
 	gl.NewList(list, gl.GL_COMPILE)
@@ -23,7 +19,7 @@ func NewGear(innerRadius float32,
 	gear(innerRadius, outerRadius, width, teeth, toothDepth)
 	gl.EndList()
 
-	return Gear{list}
+	return list
 }
 
 func gear(innerRadius float32, outerRadius float32,
