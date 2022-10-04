@@ -1,25 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"time"
 
 	"goglgears/pkg/gear"
 	"goglgears/pkg/gl"
 	"goglgears/pkg/glfw"
-)
-
-var (
-	gear1 uint
-	gear2 uint
-	gear3 uint
-)
-
-var (
-	view_rotx float32 = 20.0
-	view_roty float32 = 30.0
-	view_rotz float32 = 0.0
-	angle     float32 = 0.0
 )
 
 var (
@@ -29,13 +16,7 @@ var (
 	animate    = true  /* Animation */
 
 	eyesep    float64 = 5.0  /* Eye separation. */
-	fix_point float32 = 40.0 /* Fixation point distance.  */
-)
-
-var ( /* Stereo frustum params.  */
-	left  float64
-	right float64
-	asp   float64
+	fix_point float64 = 40.0 /* Fixation point distance.  */
 )
 
 func main() {
@@ -46,46 +27,100 @@ func main() {
 
 func run() error {
 
+	var printInfo bool
+	winWidth, winHeight := 800, 600
+
 	if !glfw.Init() {
 		return glfw.GetError()
 	}
 
 	defer glfw.Terminate()
 
-	win := glfw.CreateWindow(600, 400, "goglgears", nil, nil)
+	win := glfw.CreateWindow(winWidth, winHeight, "goglgears", nil, nil)
 	if win == nil {
 		return glfw.GetError()
 	}
+	glfw.MakeContextCurrent(win)
 
-	defer func() {
-		glfw.DestroyWindow(win)
-	}()
-
-	var err error
+	if printInfo {
+		fmt.Printf("GL_RENDERER   = %s\n", gl.GetString(gl.GL_RENDERER))
+		fmt.Printf("GL_VERSION    = %s\n", gl.GetString(gl.GL_VERSION))
+		fmt.Printf("GL_VENDOR     = %s\n", gl.GetString(gl.GL_VENDOR))
+		fmt.Printf("GL_EXTENSIONS = %s\n", gl.GetString(gl.GL_EXTENSIONS))
+	}
 
 	glinit()
 
+	/* Set initial projection/viewing transformation.
+	 * We can't be sure we'll get a ConfigureNotify event when the window
+	 * first appears.
+	 */
+	reshape(winWidth, winHeight)
+
 	for !glfw.WindowShouldClose(win) {
 
-		glfw.SwapBuffers(win)
+		draw_frame(win)
 		glfw.PollEvents()
 
-		err = glfw.GetError()
-		if err != nil {
-			return err
+		if err := glfw.GetError(); err != nil {
+			break
 		}
 	}
+
+	glfw.DestroyWindow(win)
+
+	gl.DeleteLists(gear1, 1)
+	gl.DeleteLists(gear2, 1)
+	gl.DeleteLists(gear3, 1)
 
 	return glfw.GetError()
 }
 
+var ( /* Stereo frustum params.  */
+	left  float64
+	right float64
+	asp   float64
+)
+
+func reshape(width, height int) {
+	gl.Viewport(0, 0, width, height)
+
+	if stereo {
+		var w float64
+
+		asp = float64(height) / float64(width)
+		w = fix_point * (1.0 / 5.0)
+
+		left = -5.0 * ((w - 0.5*eyesep) / fix_point)
+		right = 5.0 * ((w + 0.5*eyesep) / fix_point)
+	} else {
+		h := float64(height) / float64(width)
+
+		gl.MatrixMode(gl.GL_PROJECTION)
+		gl.LoadIdentity()
+		gl.Frustum(-1.0, 1.0, -h, h, 5.0, 60.0)
+	}
+
+	gl.MatrixMode(gl.GL_MODELVIEW)
+	gl.LoadIdentity()
+	gl.Translatef(0.0, 0.0, -40.0)
+}
+
+var (
+	gear1 uint
+	gear2 uint
+	gear3 uint
+)
+
+var (
+	pos   = [4]float32{5.0, 5.0, 10.0, 0.0}
+	red   = [4]float32{0.8, 0.1, 0.0, 1.0}
+	green = [4]float32{0.0, 0.8, 0.2, 1.0}
+	blue  = [4]float32{0.2, 0.2, 1.0, 1.0}
+)
+
 func glinit() {
-	var (
-		pos   = [4]float32{5.0, 5.0, 10.0, 0.0}
-		red   = [4]float32{0.8, 0.1, 0.0, 1.0}
-		green = [4]float32{0.0, 0.8, 0.2, 1.0}
-		blue  = [4]float32{0.2, 0.2, 1.0, 1.0}
-	)
+
 	gl.Lightfv(gl.GL_LIGHT0, gl.GL_POSITION, &pos[0])
 	gl.Enable(gl.GL_CULL_FACE)
 	gl.Enable(gl.GL_LIGHTING)
@@ -93,12 +128,34 @@ func glinit() {
 	gl.Enable(gl.GL_DEPTH_TEST)
 
 	/* make the gears */
-	gear1 = gear.NewGear(1.0, 4.0, 1.0, 20, 0.7, red)
-	gear2 = gear.NewGear(0.5, 2.0, 2.0, 10, 0.7, green)
-	gear3 = gear.NewGear(1.3, 2.0, 0.5, 10, 0.7, blue)
+	/* make the gears */
+	gear1 = gl.GenLists(1)
+	gl.NewList(gear1, gl.GL_COMPILE)
+	gl.Materialfv(gl.GL_FRONT, gl.GL_AMBIENT_AND_DIFFUSE, &red[0])
+	gear.Gear(1.0, 4.0, 1.0, 20, 0.7)
+	gl.EndList()
+
+	gear2 = gl.GenLists(1)
+	gl.NewList(gear2, gl.GL_COMPILE)
+	gl.Materialfv(gl.GL_FRONT, gl.GL_AMBIENT_AND_DIFFUSE, &green[0])
+	gear.Gear(0.5, 2.0, 2.0, 10, 0.7)
+	gl.EndList()
+
+	gear3 = gl.GenLists(1)
+	gl.NewList(gear3, gl.GL_COMPILE)
+	gl.Materialfv(gl.GL_FRONT, gl.GL_AMBIENT_AND_DIFFUSE, &blue[0])
+	gear.Gear(1.3, 2.0, 0.5, 10, 0.7)
+	gl.EndList()
 
 	gl.Enable(gl.GL_NORMALIZE)
 }
+
+var (
+	view_rotx float32 = 20.0
+	view_roty float32 = 30.0
+	view_rotz float32 = 0.0
+	angle     float32 = 0.0
+)
 
 func draw() {
 	gl.Clear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -169,43 +226,46 @@ func draw_gears() {
 }
 
 var (
-	frames = 0
-	tRot0 = -1.0 
-	tRate0 = -1.0
+	frames         = 0
+	tRot0  float64 = -1
+	tRate0 float64 = -1
 )
 
 /** Draw single frame, do SwapBuffers, compute FPS */
-func draw_frame(win *glfw.Window)
-{
+func draw_frame(win *glfw.Window) {
 
-   dt, t = time.Now().Unix();
+	dt := glfw.GetTime()
+	t := dt
 
-   if (tRot0 < 0.0)
-      tRot0 = t;
-   dt = t - tRot0;
-   tRot0 = t;
+	if tRot0 < 0.0 {
+		tRot0 = t
+	}
+	dt = t - tRot0
+	tRot0 = t
 
-   if (animate) {
-      /* advance rotation for next frame */
-      angle += 70.0 * dt;  /* 70 degrees per second */
-      if (angle > 3600.0)
-         angle -= 3600.0;
-   }
+	if animate {
+		/* advance rotation for next frame */
+		angle += 70.0 * float32(dt) /* 70 degrees per second */
+		if angle > 3600.0 {
+			angle -= 3600.0
+		}
+	}
 
-   draw_gears();
-   glXSwapBuffers(dpy, win);
+	draw_gears()
+	glfw.SwapBuffers(win)
 
-   frames++;
-   
-   if (tRate0 < 0.0)
-      tRate0 = t;
-   if (t - tRate0 >= 5.0) {
-      GLfloat seconds = t - tRate0;
-      GLfloat fps = frames / seconds;
-      printf("%d frames in %3.1f seconds = %6.3f FPS\n", frames, seconds,
-             fps);
-      fflush(stdout);
-      tRate0 = t;
-      frames = 0;
-   }
+	frames++
+
+	if tRate0 < 0.0 {
+		tRate0 = t
+	}
+	if t-tRate0 >= 5.0 {
+		seconds := t - tRate0
+		fps := float64(frames) / seconds
+		fmt.Printf("%d frames in %3.1f seconds = %6.3f FPS\n", frames, seconds,
+			fps)
+		//fflush(stdout)
+		tRate0 = t
+		frames = 0
+	}
 }

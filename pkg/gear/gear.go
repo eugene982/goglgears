@@ -6,23 +6,7 @@ import (
 	"goglgears/pkg/gl"
 )
 
-func NewGear(innerRadius float32,
-	outerRadius float32,
-	width float32,
-	teeth int,
-	toothDepth float32,
-	material [4]float32) uint {
-
-	list := gl.GenLists(1)
-	gl.NewList(list, gl.GL_COMPILE)
-	gl.Materialfv(gl.GL_FRONT, gl.GL_AMBIENT_AND_DIFFUSE, &material[0])
-	gear(innerRadius, outerRadius, width, teeth, toothDepth)
-	gl.EndList()
-
-	return list
-}
-
-func gear(innerRadius float32, outerRadius float32,
+func Gear(innerRadius float32, outerRadius float32,
 	width float32, teeth int, toothDepth float32) {
 	var (
 		i          int
@@ -139,7 +123,6 @@ func gear(innerRadius float32, outerRadius float32,
 		gl.Vertex3f(r0*cos(angle), r0*sin(angle), width*0.5)
 	}
 	gl.End()
-
 }
 
 func sin(a float32) float32 {

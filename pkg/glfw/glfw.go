@@ -20,3 +20,7 @@ func Terminate() {
 func PollEvents() {
 	C.glfwPollEvents()
 }
+
+func GetTime() float64 {
+	return float64(C.glfwGetTime())
+}

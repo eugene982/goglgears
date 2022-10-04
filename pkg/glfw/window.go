@@ -30,3 +30,7 @@ func WindowShouldClose(win *Window) bool {
 func SwapBuffers(win *Window) {
 	C.glfwSwapBuffers(win)
 }
+
+func MakeContextCurrent(win *Window) {
+	C.glfwMakeContextCurrent(win)
+}

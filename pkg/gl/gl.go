@@ -3,6 +3,7 @@ package gl
 // #cgo pkg-config: opengl
 // #include <GL/gl.h>
 import "C"
+import "unsafe"
 
 const (
 	GL_FLAT = C.GL_FLAT
@@ -37,24 +38,31 @@ const ( // light
 	GL_POSITION = C.GL_POSITION
 )
 
-func Begin(mode uint) {
-	C.glBegin(C.uint(mode))
+const (
+	GL_RENDERER   = C.GL_RENDERER
+	GL_VERSION    = C.GL_VERSION
+	GL_VENDOR     = C.GL_VENDOR
+	GL_EXTENSIONS = C.GL_EXTENSIONS
+)
+
+func Begin(mode C.uint) {
+	C.glBegin(mode)
 }
 
 func End() {
 	C.glEnd()
 }
 
-func Enable(mode uint) {
-	C.glEnable(C.uint(mode))
+func Enable(mode C.uint) {
+	C.glEnable(mode)
 }
 
-func Disable(mode uint) {
-	C.glDisable(C.uint(mode))
+func Disable(mode C.uint) {
+	C.glDisable(mode)
 }
 
-func ShadeModel(mode uint) {
-	C.glShadeModel(C.uint(mode))
+func ShadeModel(mode C.uint) {
+	C.glShadeModel(mode)
 }
 
 func Normal3f(nx, ny, nz float32) {
@@ -85,16 +93,24 @@ func EndList() {
 	C.glEndList()
 }
 
-func Clear(mask uint) {
-	C.glClear(C.uint(mask))
+func CallList(list uint) {
+	C.glCallList(C.uint(list))
 }
 
-func DrawBuffer(mode uint) {
-	C.glDrawBuffer(C.uint(mode))
+func DeleteLists(list uint, lrange int) {
+	C.glDeleteLists(C.uint(list), C.int(lrange))
 }
 
-func MatrixMode(mode uint) {
-	C.glMatrixMode(C.uint(mode))
+func Clear(mask C.uint) {
+	C.glClear(mask)
+}
+
+func DrawBuffer(mode C.uint) {
+	C.glDrawBuffer(mode)
+}
+
+func MatrixMode(mode C.uint) {
+	C.glMatrixMode(mode)
 }
 
 func PushMatrix() {
@@ -117,10 +133,6 @@ func Translated(x, y, z float64) {
 	C.glTranslated(C.double(x), C.double(y), C.double(z))
 }
 
-func CallList(list uint) {
-	C.glCallList(C.uint(list))
-}
-
 func LoadIdentity() {
 	C.glLoadIdentity()
 }
@@ -129,4 +141,13 @@ func Frustum(left, right, bottom, top, zNear, zFar float64) {
 	C.glFrustum(C.double(left), C.double(right),
 		C.double(bottom), C.double(top),
 		C.double(zNear), C.double(zFar))
+}
+
+func GetString(name uint) string {
+	var ch = C.glGetString(C.uint(name))
+	return C.GoString((*C.char)(unsafe.Pointer(ch)))
+}
+
+func Viewport(x, y, width, height int) {
+	C.glViewport(C.int(x), C.int(y), C.int(width), C.int(height))
 }
