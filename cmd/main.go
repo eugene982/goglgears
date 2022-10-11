@@ -25,6 +25,10 @@ func main() {
 	}
 }
 
+func onResize(win *glfw.Window, h, w int) {
+	fmt.Println(win, h, w)
+}
+
 func run() error {
 
 	var printInfo bool
@@ -41,6 +45,7 @@ func run() error {
 		return glfw.GetError()
 	}
 	glfw.MakeContextCurrent(win)
+	glfw.SetWindowSizeCallback(win, onResize)
 
 	if printInfo {
 		fmt.Printf("GL_RENDERER   = %s\n", gl.GetString(gl.GL_RENDERER))

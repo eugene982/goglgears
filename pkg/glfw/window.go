@@ -1,9 +1,12 @@
 package glfw
 
-// #cgo pkg-config: glfw3
-// #include <GLFW/glfw3.h>
+//#cgo pkg-config: glfw3
+//#include "gobridge.h"
 import "C"
-import "unsafe"
+import (
+	"fmt"
+	"unsafe"
+)
 
 type Window = C.GLFWwindow
 
@@ -33,4 +36,22 @@ func SwapBuffers(win *Window) {
 
 func MakeContextCurrent(win *Window) {
 	C.glfwMakeContextCurrent(win)
+}
+
+////////////////////////////////////
+// typedef void (* GLFWwindowsizefun)(GLFWwindow* window, int width, int height);
+// GLFWAPI GLFWwindowsizefun glfwSetWindowSizeCallback(GLFWwindow* window,
+//	GLFWwindowsizefun callback);
+
+type Windowsizefun func(*Window, int, int)
+
+var bindWindowsizefun Windowsizefun
+
+func SetWindowSizeCallback(win *Window, callback Windowsizefun) {
+	C.goBridgeSetWindowSizeCallback(win)
+}
+
+//export goBrigdeWindowsizefun
+func goBrigdeWindowsizefun(gwin *C.GLFWwindow, width C.int, height C.int) {
+	fmt.Println(gwin, width, height)
 }
