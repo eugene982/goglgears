@@ -76,13 +76,13 @@ func run() error {
 	glfw.SetKeyCallback(win, onKey)
 
 	if printInfo {
-		fmt.Printf("GL_RENDERER   = %s\n", gl.GetString(gl.GL_RENDERER))
-		fmt.Printf("GL_VERSION    = %s\n", gl.GetString(gl.GL_VERSION))
-		fmt.Printf("GL_VENDOR     = %s\n", gl.GetString(gl.GL_VENDOR))
-		fmt.Printf("GL_EXTENSIONS = %s\n", gl.GetString(gl.GL_EXTENSIONS))
+		fmt.Println("GL_RENDERER   = ", gl.GetString(gl.GL_RENDERER))
+		fmt.Println("GL_VERSION    = ", gl.GetString(gl.GL_VERSION))
+		fmt.Println("GL_VENDOR     = ", gl.GetString(gl.GL_VENDOR))
+		fmt.Println("GL_EXTENSIONS = ", gl.GetString(gl.GL_EXTENSIONS))
 	}
 
-	delGears := gear.GearInit(stereo)
+	delGears := gear.Init(stereo)
 	defer delGears()
 
 	/* Set initial projection/viewing transformation.
@@ -92,7 +92,6 @@ func run() error {
 	gear.Reshape(winWidth, winHeight)
 
 	for !glfw.WindowShouldClose(win) {
-
 		drawFrame(win)
 		glfw.PollEvents()
 
