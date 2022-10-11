@@ -4,7 +4,6 @@ package glfw
 //#include "gobridge.h"
 import "C"
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -45,13 +44,49 @@ func MakeContextCurrent(win *Window) {
 
 type Windowsizefun func(*Window, int, int)
 
-var bindWindowsizefun Windowsizefun
+var bindsWindowsizefun = make(map[*Window]Windowsizefun)
 
-func SetWindowSizeCallback(win *Window, callback Windowsizefun) {
+func SetWindowSizeCallback(win *Window, callback Windowsizefun) (prev Windowsizefun) {
+	prev = bindsWindowsizefun[win]
+	bindsWindowsizefun[win] = callback
+
 	C.goBridgeSetWindowSizeCallback(win)
+	return prev
 }
 
 //export goBrigdeWindowsizefun
 func goBrigdeWindowsizefun(gwin *C.GLFWwindow, width C.int, height C.int) {
-	fmt.Println(gwin, width, height)
+	callback, ok := bindsWindowsizefun[gwin]
+	if ok {
+		callback(gwin, int(width), int(height))
+	}
+}
+
+//////////////////////////////////////////////
+//typedef void (* GLFWkeyfun)(GLFWwindow*,int,int,int,int);
+//GLFWAPI GLFWkeyfun glfwSetKeyCallback(GLFWwindow* window,
+//	GLFWkeyfun callback)
+
+const ( //action
+
+)
+
+type Keyfun func(*Window, int, int, int, int)
+
+var bindsKeyfun = make(map[*Window]Keyfun)
+
+func SetKeyCallback(win *Window, callback Keyfun) (prev Keyfun) {
+	prev = bindsKeyfun[win]
+	bindsKeyfun[win] = callback
+
+	C.goBridgeSetKeyCallback(win)
+	return prev
+}
+
+//export goBrigdeKeyfun
+func goBrigdeKeyfun(gwin *C.GLFWwindow, key, scancode, action, mods C.int) {
+	callback, ok := bindsKeyfun[gwin]
+	if ok {
+		callback(gwin, int(key), int(scancode), int(action), int(mods))
+	}
 }
