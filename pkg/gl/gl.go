@@ -81,8 +81,8 @@ func GenLists(lrange int) uint {
 	return uint(C.glGenLists(C.int(lrange)))
 }
 
-func NewList(list uint, mode uint) {
-	C.glNewList(C.uint(list), C.uint(mode))
+func NewList(list uint, mode C.uint) {
+	C.glNewList(C.uint(list), mode)
 }
 
 func Materialfv(face uint, pname uint, params *float32) {

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"runtime"
 	"strings"
 
 	"goglgears/cmd/gear"
@@ -20,6 +21,11 @@ var (
 	winWidth   = 300
 	winHeight  = 300
 )
+
+func init() {
+	// Иначе падает через несколько секунд.
+	runtime.LockOSThread()
+}
 
 func main() {
 
@@ -43,10 +49,17 @@ func main() {
 	}
 }
 
-func run() error {
+func run() (err error) {
+
+	// Проверим наличие ошибки библиотеки при возврате
+	defer func() {
+		if err == nil {
+			err = glfw.GetError()
+		}
+	}()
 
 	if !glfw.Init() {
-		return glfw.GetError()
+		return
 	}
 	defer glfw.Terminate()
 
@@ -67,7 +80,7 @@ func run() error {
 
 	win := glfw.CreateWindow(winWidth, winHeight, "goglgears", nil, nil)
 	if win == nil {
-		return glfw.GetError()
+		return
 	}
 	defer glfw.DestroyWindow(win)
 
@@ -92,6 +105,7 @@ func run() error {
 	gear.Reshape(winWidth, winHeight)
 
 	for !glfw.WindowShouldClose(win) {
+
 		drawFrame(win)
 		glfw.PollEvents()
 
@@ -100,7 +114,7 @@ func run() error {
 		}
 	}
 
-	return glfw.GetError()
+	return
 }
 
 func onResize(win *glfw.Window, width, height int) {
@@ -118,6 +132,19 @@ func onKey(win *glfw.Window, key, scancode, action, mods int) {
 		switch key {
 		case glfw.GLFW_KEY_A:
 			animate = !animate
+		}
+		// Если был запуск в русской расскладке
+		// клавиши не подхватываюится
+	} else if key == glfw.GLFW_KEY_UNKNOWN {
+		switch scancode {
+		case 113: // LEFT
+			view_roty += 5.0
+		case 114: // RIGHT
+			view_roty -= 5.0
+		case 111: // UP
+			view_rotx += 5.0
+		case 116: // DOWN
+			view_rotx -= 5.0
 		}
 	} else {
 		switch key {
@@ -173,7 +200,6 @@ func drawFrame(win *glfw.Window) {
 		fps := float64(frames) / seconds
 		fmt.Printf("%d frames in %3.1f seconds = %6.3f FPS\n", frames, seconds,
 			fps)
-		//fflush(stdout)
 		tRate0 = t
 		frames = 0
 	}

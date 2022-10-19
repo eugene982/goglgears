@@ -20,6 +20,8 @@ const ( // hints
 )
 
 const ( /* Printable keys */
+	GLFW_KEY_UNKNOWN = C.GLFW_KEY_UNKNOWN
+
 	GLFW_KEY_A = C.GLFW_KEY_A
 
 	GLFW_KEY_RIGHT = C.GLFW_KEY_RIGHT
