@@ -13,13 +13,13 @@ import (
 )
 
 var (
-	fullscreen = false /* Create a single fullscreen window */
-	stereo     = false /* Enable stereo.  */
-	samples    = 0     /* Choose visual with at least N samples. */
-	animate    = true  /* Animation */
-	printInfo  = false
-	winWidth   = 300
-	winHeight  = 300
+	fullscreenFlag = false /* Create a single fullscreen window */
+	stereoFlag     = false /* Enable stereo.  */
+	samplesFlag    = 0     /* Choose visual with at least N samples. */
+	animateFlag    = true  /* Animation */
+	printInfoFlag  = false
+	winWidthFlag   = 300
+	winHeightFlag  = 300
 )
 
 func init() {
@@ -30,15 +30,15 @@ func init() {
 func main() {
 
 	var geometry string
-
-	flag.BoolVar(&stereo, "stereo", false, "run in stereo mode")
-	flag.IntVar(&samples, "samples", 0, "run in multisample mode with at least N samples")
-	flag.BoolVar(&printInfo, "info", false, "display OpenGL renderer info")
+	flag.BoolVar(&fullscreenFlag, "fullscreen", false, "run in fullscreen mode")
+	flag.BoolVar(&stereoFlag, "stereo", false, "run in stereo mode")
+	flag.IntVar(&samplesFlag, "samples", 0, "run in multisample mode with at least N samples")
+	flag.BoolVar(&printInfoFlag, "info", false, "display OpenGL renderer info")
 	flag.StringVar(&geometry, "geometry", "", "WxH window geometry")
 	flag.Parse()
 
 	if geometry != "" {
-		_, err := fmt.Fscanf(strings.NewReader(geometry), "%dx%d", &winWidth, &winHeight)
+		_, err := fmt.Fscanf(strings.NewReader(geometry), "%dx%d", &winWidthFlag, &winHeightFlag)
 		if err != nil {
 			log.Fatal("error parse geometry: ", err)
 		}
@@ -49,72 +49,79 @@ func main() {
 	}
 }
 
-func run() (err error) {
-
-	// Проверим наличие ошибки библиотеки при возврате
-	defer func() {
-		if err == nil {
-			err = glfw.GetError()
-		}
-	}()
-
-	if !glfw.Init() {
-		return
+func run() error {
+	err := glfw.Init()
+	if err != nil {
+		return err
 	}
 	defer glfw.Terminate()
 
 	// set window hints
-	if stereo {
-		glfw.WindowHint(glfw.GLFW_STEREO, glfw.GLFW_TRUE)
-		if err := glfw.GetError(); err != nil {
+	if stereoFlag {
+		err = glfw.WindowHint(glfw.STEREO, glfw.TRUE)
+		if err != nil {
 			return err
 		}
 	}
 
-	if samples > 0 {
-		glfw.WindowHint(glfw.GLFW_SAMPLES, samples)
-		if err := glfw.GetError(); err != nil {
+	if samplesFlag > 0 {
+		err = glfw.WindowHint(glfw.SAMPLES, samplesFlag)
+		if err != nil {
 			return err
 		}
 	}
 
-	win := glfw.CreateWindow(winWidth, winHeight, "goglgears", nil, nil)
+	win, err := createWindow("goglgears")
 	if win == nil {
-		return
+		return err
 	}
 	defer glfw.DestroyWindow(win)
 
-	glfw.MakeContextCurrent(win)
-	glfw.SetWindowSizeCallback(win, onResize)
-	glfw.SetKeyCallback(win, onKey)
-
-	if printInfo {
-		fmt.Println("GL_RENDERER   = ", gl.GetString(gl.GL_RENDERER))
-		fmt.Println("GL_VERSION    = ", gl.GetString(gl.GL_VERSION))
-		fmt.Println("GL_VENDOR     = ", gl.GetString(gl.GL_VENDOR))
-		fmt.Println("GL_EXTENSIONS = ", gl.GetString(gl.GL_EXTENSIONS))
+	if printInfoFlag {
+		printInfo()
 	}
 
-	delGears := gear.Init(stereo)
+	delGears := gear.Init(stereoFlag)
 	defer delGears()
 
 	/* Set initial projection/viewing transformation.
 	 * We can't be sure we'll get a ConfigureNotify event when the window
 	 * first appears.
 	 */
-	gear.Reshape(winWidth, winHeight)
+	gear.Reshape(winWidthFlag, winHeightFlag)
 
+	// main loop
 	for !glfw.WindowShouldClose(win) {
-
 		drawFrame(win)
 		glfw.PollEvents()
-
-		if err := glfw.GetError(); err != nil {
-			return err
-		}
 	}
 
-	return
+	return nil
+}
+
+func createWindow(title string) (*glfw.Window, error) {
+	var pmon *glfw.Monitor
+	if fullscreenFlag {
+		pmon = glfw.GetPrimaryMonitor()
+	}
+
+	win, err := glfw.CreateWindow(winWidthFlag, winHeightFlag, title,
+		pmon, nil)
+	if win == nil {
+		return nil, err
+	}
+
+	glfw.MakeContextCurrent(win)
+	glfw.SetWindowSizeCallback(win, onResize)
+	glfw.SetKeyCallback(win, onKey)
+	return win, nil
+}
+
+func printInfo() {
+	fmt.Println("GL_RENDERER   = ", gl.GetString(gl.GL_RENDERER))
+	fmt.Println("GL_VERSION    = ", gl.GetString(gl.GL_VERSION))
+	fmt.Println("GL_VENDOR     = ", gl.GetString(gl.GL_VENDOR))
+	fmt.Println("GL_EXTENSIONS = ", gl.GetString(gl.GL_EXTENSIONS))
 }
 
 func onResize(win *glfw.Window, width, height int) {
@@ -128,14 +135,16 @@ var (
 )
 
 func onKey(win *glfw.Window, key, scancode, action, mods int) {
-	if action == glfw.GLFW_RELEASE {
+	if action == glfw.RELEASE {
 		switch key {
-		case glfw.GLFW_KEY_A:
-			animate = !animate
+		case glfw.KEY_A:
+			animateFlag = !animateFlag
+		case glfw.KEY_ESCAPE:
+			glfw.SetWindowShouldClose(win)
 		}
 		// Если был запуск в русской расскладке
 		// клавиши не подхватываюится
-	} else if key == glfw.GLFW_KEY_UNKNOWN {
+	} else if key == glfw.KEY_UNKNOWN {
 		switch scancode {
 		case 113: // LEFT
 			view_roty += 5.0
@@ -148,13 +157,13 @@ func onKey(win *glfw.Window, key, scancode, action, mods int) {
 		}
 	} else {
 		switch key {
-		case glfw.GLFW_KEY_LEFT:
+		case glfw.KEY_LEFT:
 			view_roty += 5.0
-		case glfw.GLFW_KEY_RIGHT:
+		case glfw.KEY_RIGHT:
 			view_roty -= 5.0
-		case glfw.GLFW_KEY_UP:
+		case glfw.KEY_UP:
 			view_rotx += 5.0
-		case glfw.GLFW_KEY_DOWN:
+		case glfw.KEY_DOWN:
 			view_rotx -= 5.0
 		}
 	}
@@ -179,7 +188,7 @@ func drawFrame(win *glfw.Window) {
 	dt = t - tRot0
 	tRot0 = t
 
-	if animate {
+	if animateFlag {
 		/* advance rotation for next frame */
 		angle += 70.0 * float32(dt) /* 70 degrees per second */
 		if angle > 3600.0 {

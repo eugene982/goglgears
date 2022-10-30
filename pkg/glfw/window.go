@@ -9,16 +9,15 @@ import (
 
 type Window = C.GLFWwindow
 
-type Monitor = C.GLFWmonitor
-
 func CreateWindow(width int, height int, title string,
-	monitor *Monitor, share *Window) *Window {
+	monitor *Monitor, share *Window) (*Window, error) {
 
 	pt := append([]byte(title), 0)
 
 	return C.glfwCreateWindow(C.int(width), C.int(height),
-		(*C.char)(unsafe.Pointer(&pt[0])),
-		monitor, share)
+			(*C.char)(unsafe.Pointer(&pt[0])),
+			monitor, share),
+		GetError()
 }
 
 func DestroyWindow(win *Window) {
@@ -27,6 +26,10 @@ func DestroyWindow(win *Window) {
 
 func WindowShouldClose(win *Window) bool {
 	return C.glfwWindowShouldClose(win) != 0
+}
+
+func SetWindowShouldClose(win *Window) {
+	C.glfwSetWindowShouldClose(win, TRUE)
 }
 
 func SwapBuffers(win *Window) {
@@ -66,10 +69,6 @@ func goBrigdeWindowsizefun(gwin *C.GLFWwindow, width C.int, height C.int) {
 //typedef void (* GLFWkeyfun)(GLFWwindow*,int,int,int,int);
 //GLFWAPI GLFWkeyfun glfwSetKeyCallback(GLFWwindow* window,
 //	GLFWkeyfun callback)
-
-const ( //action
-
-)
 
 type Keyfun func(*Window, int, int, int, int)
 

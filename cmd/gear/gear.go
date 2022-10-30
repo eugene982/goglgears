@@ -6,7 +6,7 @@ import (
 	"goglgears/pkg/gl"
 )
 
-const M_PI = 3.14159265
+const M_PI = math.Pi
 
 var (
 	gear1 uint
@@ -21,9 +21,9 @@ var (
 	blue  = [4]float32{0.2, 0.2, 1.0, 1.0}
 )
 
-func Init(stereo_ bool) (delete func()) {
+func Init(stereoFlag bool) (delete func()) {
 
-	stereo = stereo_
+	stereo = stereoFlag
 
 	gl.Lightfv(gl.GL_LIGHT0, gl.GL_POSITION, &pos[0])
 	gl.Enable(gl.GL_CULL_FACE)
