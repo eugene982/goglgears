@@ -56,23 +56,8 @@ func run() error {
 	}
 	defer glfw.Terminate()
 
-	// set window hints
-	if stereoFlag {
-		err = glfw.WindowHint(glfw.STEREO, glfw.TRUE)
-		if err != nil {
-			return err
-		}
-	}
-
-	if samplesFlag > 0 {
-		err = glfw.WindowHint(glfw.SAMPLES, samplesFlag)
-		if err != nil {
-			return err
-		}
-	}
-
 	win, err := createWindow("goglgears")
-	if win == nil {
+	if err != nil {
 		return err
 	}
 	defer glfw.DestroyWindow(win)
@@ -100,6 +85,22 @@ func run() error {
 }
 
 func createWindow(title string) (*glfw.Window, error) {
+
+	// set window hints
+	if stereoFlag {
+		err := glfw.WindowHint(glfw.STEREO, glfw.TRUE)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if samplesFlag > 0 {
+		err := glfw.WindowHint(glfw.SAMPLES, samplesFlag)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	var pmon *glfw.Monitor
 	if fullscreenFlag {
 		pmon = glfw.GetPrimaryMonitor()
@@ -107,7 +108,7 @@ func createWindow(title string) (*glfw.Window, error) {
 
 	win, err := glfw.CreateWindow(winWidthFlag, winHeightFlag, title,
 		pmon, nil)
-	if win == nil {
+	if err != nil {
 		return nil, err
 	}
 
